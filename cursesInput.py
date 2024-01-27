@@ -34,9 +34,9 @@ class InputHandler:
         258: 'Down',  # Default: Down arrow
         260: 'Left',  # Default: Left arrow
         261: 'Right',  # Default: Right arrow
-        27: 'Escape',
-        1000: 'No input',
-        114: 'Run/reload',
+        27: 'Escape',  # Default: Escape
+        1000: 'No input',  # Default: None
+        114: 'Run/reload',  # Default: r
         }
 
     keycodes = {
@@ -48,7 +48,13 @@ class InputHandler:
         261: 'Right arrow', 27: 'Escape', 1000: 'No value'
         }
 
-    def updateMapping(self, keycode, newMapping):
+    def getInput(self, screen):  # This is the interface with the inputter
+        inp = screen.getch()
+        if inp == -1:
+            inp = 1000
+        return self.keyMapping[inp]
+
+    def updateMapping(self, keycode, newMapping):  # Change specific binds
         self.keyMapping[keycode] = str(newMapping)
 
     def updateFromMenu(self, screen, keycode):
@@ -60,12 +66,7 @@ class InputHandler:
         self.keyMapping.pop(keycode)
         self.showMappings(screen)
 
-    def getInput(self, screen):
-        inp = screen.getch()
-        if inp == -1:
-            inp = 1000
-        return self.keyMapping[inp]
-
+# Creates a menu using my menu library. Displayed on top of screen.
     def showMappings(self, screen, depth=0):
         toDisplay = {}
         keys = list(self.keyMapping.items())

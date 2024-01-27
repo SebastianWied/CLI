@@ -16,9 +16,23 @@ import curses
 
 
 class Menu:
+    # =========================================================================
+    # External facing menu class. This is what is created when initializing
+    #   a menu.
+    # Takes as input:
+    #    header <str>: Name of the menu(displayed)
+    #    headerPosition <tuple of ints>:
+    #       Position of menu header(relative to screen)
+    #    menuStart <tuple of ints>:
+    #       Defines position of first menu entry(lets it be separate from hdr)
+    #    xs and ys <int>: max coord extremeties of menu.
+    #       Input allow custom max dimensions
+    #    fullScreen <bool>: takes up full screen or not.
+    #    screen <curses screen>: Screen to draw on
+    # =========================================================================
     def __init__(self, header=None, headerPosition=(0, 0), menuStart='DEFAULT',
                  xs=0, ys=0, fullScreen=False, screen=None):
-        if menuStart == 'DEFAULT':
+        if menuStart == 'DEFAULT':  # No provided start position
             self.menuStart = (headerPosition[0], headerPosition[1] + 1)
         else:
             self.menuStart = menuStart
@@ -29,16 +43,30 @@ class Menu:
         self.currentSelection = 0
         self.fullScreen = fullScreen
         self.embeddedMenus = []
-        self.xs = self.maxEntryLen
+        if self.xs == 0:
+            self.xs = self.maxEntryLen  # No provided x max
         if header:
-            self.ys = 1
+            self.ys = 1  # If there is a header, list needs to be min 1 long.
         else:
-            self.ys = 0
+            self.ys = 0  # If there isnt, it starts as a 0 tall menu
+        # If header is not lined up with menu start, adjust y max
         self.ys += abs(self.menuStart[1] - headerPosition[1])
 
     def addEntry(self, listPosition='end', name='', description='',
                  functionCall=None, params=[], visualAtts=[],
                  embeddedMenu=None):
+        # =====================================================================
+        # External interface for creating new menu entries.
+        # Inputs:
+        #   listPosition<int>: Position in menu to add. Defaults to end
+        #   name<str>: Name of menu entry
+        #   description<str>: Accompanying info for name
+        #   functionCall<function>: Allows for a menu to execute a function
+        #   params<list>: Allows for parameters to be passed into function call
+        #   visualAtts<curses attributes>: Special printing info
+        #   embeddedMenu<Menu>: Allows for one menu to point to another
+        #       when selected
+        # =====================================================================
         newEntry = MenuEntry(name=name, description=description,
                              visualAtts=visualAtts,
                              functionCall=functionCall, params=params)
@@ -53,30 +81,30 @@ class Menu:
         self.xs = max(self.xs, self.maxEntryLen)
         self.ys += 1
 
-    def getEntry(self, position):
+    def getEntry(self, position):  # Retrieve entry at position in list
         return self.menuEntries[position]
 
-    def getSelected(self):
+    def getSelected(self):  # Retrieve currently selected menu
         return self.menuEntries[self.currentSelection]
 
-    def getSubMenu(self):
+    def getSubMenu(self):  # Returns embedded menu if it exists. If not, None
         return self.embeddedMenus[self.currentSelection]
 
-    def removeEntry(self, position):
+    def removeEntry(self, position):  # Pop entry from menu
         self.menuEntries.pop(position)
 
-    def moveSelection(self, move):
+    def moveSelection(self, move):  # Change selected menu entry
         if move == 'Up':
             self.currentSelection = max(0, self.currentSelection-1)
         if move == 'Down':
             self.currentSelection = min(len(self.menuEntries)-1,
                                         self.currentSelection+1)
 
-    def moveMenu(self, newX, newY):
+    def moveMenu(self, newX, newY):  # Relocate menu
         self.headerPosition = (newX, newY)
-        self.menuStart = (newX, newY+1)
+        self.menuStart = (newX, newY+1)  # Moves menu entries to follow header
 
-    def drawMenu(self, screen):
+    def drawMenu(self, screen):  # Displays menu on passed in curses screen
         sh, sw = screen.getmaxyx()
         if self.fullScreen:
             for y in range(sh):
@@ -147,7 +175,7 @@ class MenuEntry:
     def changeAttributes(self, newAtts):
         self.visualAtts = newAtts
 
-    def addAttribue(self, newAtt):
+    def addAttribute(self, newAtt):
         self.visualAtts.append(newAtt)
 
     def executeCall(self):
@@ -162,6 +190,9 @@ class MenuEntry:
 
 
 class InputHandler:
+    # =========================================================================
+    #     Not used right now. Use cursesInput.py instead
+    # =========================================================================
     defaultBinds = {
         'Select': [10],
         'Up': [119, curses.KEY_UP],
